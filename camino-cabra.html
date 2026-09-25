@@ -600,6 +600,7 @@ const defaultState = {
   streak:0, coins:0, xp:0, xpNeeded:500, level:1,
   owned:[], equipped:[],
   streakShields:0, lastCompletionDate:null,
+  userName:'',
   dayDone:false, daySuccess:false,
 };
 let state = load();
@@ -797,7 +798,15 @@ function renderOnboarding(){
     `
   };
 }
+function displayName(){
+  return (state.userName || '').trim() || 'Will';
+}
 function loginSubmit(){
+  // El campo "Usuario" no valida contra nada (no hay backend real todavía),
+  // pero sí define cómo te saluda la app: si escribiste algo, lo usamos;
+  // si lo dejás vacío, mantenemos el último nombre guardado (o "Will" por defecto).
+  const typed = (document.getElementById('loginUser').value || '').trim();
+  if(typed) state.userName = typed;
   if(state.onboarded){
     // Ya conoce la app: entra directo a su Camino, sin repetir la introducción.
     state.loggedIn = true;
@@ -835,6 +844,7 @@ function logout(){
     equipped: state.equipped,
     streakShields: state.streakShields,
     lastCompletionDate: state.lastCompletionDate,
+    userName: state.userName,
   });
   render();
   toast('Sesión cerrada');
@@ -860,7 +870,7 @@ function renderContract(){
   const body = `
     <div class="hello">
       ${goatImg({size:56, src:goatForEquipped()})}
-      <p><strong>¡Hola Will!</strong><br>¿Listo para las cumbres de hoy? Hagamos el contrato de hoy.</p>
+      <p><strong>¡Hola ${displayName()}!</strong><br>¿Listo para las cumbres de hoy? Hagamos el contrato de hoy.</p>
     </div>
     <h2 class="q-title">¿Qué montañas escalamos hoy?</h2>
     <p class="q-sub">Elegí hasta 5 objetivos diarios para que cumpla tu cabrita hoy.</p>
@@ -1036,7 +1046,7 @@ function renderPerfil(){
   const body = `
     <div class="profile-hero">
       ${goatImg({size:170, src:goatForEquipped()})}
-      <h2 class="profile-name">Will, el explorador</h2>
+      <h2 class="profile-name">${displayName()}, el explorador</h2>
       <p class="profile-level">Nivel ${state.level} — ${stage}</p>
       <div class="xp-row"><span>${state.xp} / ${state.xpNeeded} XP</span><span>Siguiente nivel: ${state.xpNeeded-state.xp} XP</span></div>
       <div class="progressbar"><div style="width:${state.xp/state.xpNeeded*100}%"></div></div>
