@@ -1054,8 +1054,19 @@ function goatForEquipped(){
 function stageName(level){
   return level<=5 ? 'Cabrito Bebé' : (level<=15 ? 'Cabra Exploradora' : 'Cabra Sabia');
 }
+// Heurístico simple para el/la: si el nombre termina en "a" lo tratamos como
+// femenino, si no, como masculino. No es infalible (hay excepciones como
+// "Rocío" o "Luca"), pero es lo más rápido sin pedirle a la persona que
+// elija género aparte.
+function guessFeminine(name){
+  const n = (name || '').trim().toLowerCase();
+  return n.length > 0 && n.endsWith('a');
+}
 function profileTitle(level){
-  return level<=5 ? 'el/la bebé' : (level<=15 ? 'el explorador' : 'el/la sabio/a');
+  const fem = guessFeminine(displayName());
+  if(level<=5) return fem ? 'la beba' : 'el bebé';
+  if(level<=15) return fem ? 'la exploradora' : 'el explorador';
+  return fem ? 'la sabia' : 'el sabio';
 }
 function renderPerfil(){
   const stage = stageName(state.level);
