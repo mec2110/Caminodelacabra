@@ -120,7 +120,7 @@
     width:100%; height:44px; padding:0 24px; box-sizing:border-box;
     font-size:12px; font-weight:600; color:var(--primary-black); flex-shrink:0;
   }
-  .topbar{ display:flex; justify-content:space-between; align-items:center; width:100%; padding:12px 24px; flex-shrink:0; box-sizing:border-box; }
+  .topbar{ display:flex; justify-content:flex-end; align-items:center; width:100%; padding:12px 24px; flex-shrink:0; box-sizing:border-box; }
   .brand-name{ font-family:'Open Sans',sans-serif; }
   .logo{ font-family:'Open Sans',sans-serif; font-weight:600; font-size:22px; color:var(--primary-text); display:flex; align-items:center; gap:6px;}
   .badges{ display:flex; gap:8px; }
@@ -285,7 +285,6 @@
   <div class="statusbar"><span>9:41</span><span>●●●●  📶  🔋</span></div>
 
   <div class="topbar" id="topbar">
-    <div class="logo">Camino</div>
     <div class="badges">
       <div class="badge streak">🔥 <span id="streakVal">0</span>d</div>
       <div class="badge coin">🌿 <span id="coinVal">0</span></div>
@@ -769,7 +768,7 @@ function renderOnboarding(){
               <label class="field-label">Contraseña</label>
               <input class="field-input" id="loginPass" type="password" placeholder="Ingresá tu contraseña" />
             </div>
-            <button class="btn-tertiary-link" onclick="toast('Pronto vas a poder registrarte 🐐')">¿Sos nuevo? Registrate acá</button>
+            <button class="btn-tertiary-link" onclick="registerSubmit()">¿Sos nuevo? Registrate acá</button>
           </div>
         </div>`,
       footer: `<button class="btn btn-primary" onclick="loginSubmit()">Ingresar</button>`
@@ -801,23 +800,30 @@ function renderOnboarding(){
 function displayName(){
   return (state.userName || '').trim() || 'Will';
 }
-function loginSubmit(){
+function readTypedName(){
   // El campo "Usuario" no valida contra nada (no hay backend real todavía),
   // pero sí define cómo te saluda la app: si escribiste algo, lo usamos;
   // si lo dejás vacío, mantenemos el último nombre guardado (o "Will" por defecto).
   const typed = (document.getElementById('loginUser').value || '').trim();
   if(typed) state.userName = typed;
-  if(state.onboarded){
-    // Ya conoce la app: entra directo a su Camino, sin repetir la introducción.
-    state.loggedIn = true;
-    state.authStep = 0;
-    state.tab = 'camino';
-    render();
-  } else {
-    state.authStep = 1;
-    render();
-  }
+}
+function loginSubmit(){
+  // "Ingresar" es para cuentas que ya existen: nunca muestra la introducción,
+  // esa vive únicamente detrás de "Registrate acá".
+  readTypedName();
+  state.onboarded = true;
+  state.loggedIn = true;
+  state.authStep = 0;
+  state.tab = 'camino';
+  render();
   toast('Sesión iniciada');
+}
+function registerSubmit(){
+  // Único camino que dispara las slides de introducción, como corresponde
+  // a un alta nueva.
+  readTypedName();
+  state.authStep = 1;
+  render();
 }
 function nextIntro(){ state.authStep++; render(); }
 function skipOnboarding(){ finishOnboarding(); }
