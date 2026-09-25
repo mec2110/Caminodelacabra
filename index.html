@@ -1054,12 +1054,15 @@ function goatForEquipped(){
 function stageName(level){
   return level<=5 ? 'Cabrito Bebé' : (level<=15 ? 'Cabra Exploradora' : 'Cabra Sabia');
 }
+function profileTitle(level){
+  return level<=5 ? 'el/la bebé' : (level<=15 ? 'el explorador' : 'el/la sabio/a');
+}
 function renderPerfil(){
   const stage = stageName(state.level);
   const body = `
     <div class="profile-hero">
       ${goatImg({size:170, src:goatForEquipped()})}
-      <h2 class="profile-name">${displayName()}, el explorador</h2>
+      <h2 class="profile-name">${displayName()}, ${profileTitle(state.level)}</h2>
       <p class="profile-level">Nivel ${state.level} — ${stage}</p>
       <div class="xp-row"><span>${state.xp} / ${state.xpNeeded} XP</span><span>Siguiente nivel: ${state.xpNeeded-state.xp} XP</span></div>
       <div class="progressbar"><div style="width:${state.xp/state.xpNeeded*100}%"></div></div>
