@@ -883,7 +883,7 @@ function renderContract(){
   const body = `
     <div class="hello">
       ${goatImg({size:56, src:goatForEquipped()})}
-      <p><strong>¡Hola ${displayName()}!</strong><br>¿Listo para las cumbres de hoy? Hagamos el contrato de hoy.</p>
+      <p><strong>¡Hola ${displayName()}!</strong><br>¿Todo listo para las cumbres de hoy? Hagamos un nuevo contrato.</p>
     </div>
     <h2 class="q-title">¿Qué montañas escalamos hoy?</h2>
     <p class="q-sub">Elegí hasta 5 objetivos diarios para que cumpla tu cabrita hoy.</p>
@@ -1054,19 +1054,13 @@ function goatForEquipped(){
 function stageName(level){
   return level<=5 ? 'Cabrito Bebé' : (level<=15 ? 'Cabra Exploradora' : 'Cabra Sabia');
 }
-// Heurístico simple para el/la: si el nombre termina en "a" lo tratamos como
-// femenino, si no, como masculino. No es infalible (hay excepciones como
-// "Rocío" o "Luca"), pero es lo más rápido sin pedirle a la persona que
-// elija género aparte.
-function guessFeminine(name){
-  const n = (name || '').trim().toLowerCase();
-  return n.length > 0 && n.endsWith('a');
-}
+// Copy neutro respecto del género de la persona: usamos "la cabra" (siempre
+// femenino en español, como sustantivo) en vez de adivinar el/la a partir
+// del nombre, algo que fallaba con nombres como "Vale".
 function profileTitle(level){
-  const fem = guessFeminine(displayName());
-  if(level<=5) return fem ? 'la beba' : 'el bebé';
-  if(level<=15) return fem ? 'la exploradora' : 'el explorador';
-  return fem ? 'la sabia' : 'el sabio';
+  if(level<=5) return 'la cabra bebé';
+  if(level<=15) return 'la cabra exploradora';
+  return 'la cabra sabia';
 }
 function renderPerfil(){
   const stage = stageName(state.level);
