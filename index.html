@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Camino de la Cabra</title>
+<title>Goat Path</title>
 <script>
   /* Modo claro por defecto, salvo que: (a) la persona ya eligió un modo antes con el
      toggle (se respeta siempre), o (b) no eligió nada todavía y su sistema/celular
@@ -765,7 +765,7 @@ function renderOnboarding(){
       body: `
         <div class="content" style="padding-top:16px;">
           <div class="focal-card">
-            <h5 class="login-title">Un paso a la vez, sin presión. <span class="login-title-accent">El Camino de la Cabra</span></h5>
+            <h5 class="login-title"><span class="login-title-accent">GOAT PATH</span>, un paso a la vez.</h5>
             ${goatImg({size:160})}
             <div class="field-group">
               <label class="field-label">Usuario</label>
@@ -1091,7 +1091,7 @@ function renderPerfil(){
 /* ---------- Ayuda / FAQs (misma info de la presentación inicial, siempre disponible) ---------- */
 function renderAyuda(){
   const body = `
-    <h2 class="q-title" style="margin-top:10px;">Cómo funciona Camino de la Cabra</h2>
+    <h2 class="q-title" style="margin-top:10px;">Cómo funciona Goat Path</h2>
     <p class="q-sub">Un repaso rápido, disponible cuando lo necesites.</p>
     ${INTRO_SLIDES.map(s=>`
       <div class="stat-box" style="margin-bottom:12px;">
@@ -1133,7 +1133,7 @@ function renderTienda(){
         <div class="shop-item ${owned?'owned':''}" onclick="buyItem('${it.id}')">
           <div class="shop-icon">${it.icon}</div>
           <div class="shop-name">${it.name}</div>
-          ${owned? `<div class="shop-owned-tag">${state.equipped.includes(it.id)?'✓ Equipado':'Poseído — tocar para equipar'}</div>` : `<div class="shop-price">🌿 ${it.price}</div>`}
+          ${owned? `<div class="shop-owned-tag">${state.equipped.includes(it.id)?'✓ Equipado':'Comprado — tocar para equipar'}</div>` : `<div class="shop-price">🌿 ${it.price}</div>`}
         </div>`;
       }).join('')}
     </div>
