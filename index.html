@@ -1104,8 +1104,9 @@ function renderPerfil(){
     <div class="evo-row ${state.level>5&&state.level<=15?'active':''}"><div><div class="t">Cabra Exploradora</div><div class="s">Nivel 6–15</div></div>${state.level>5&&state.level<=15?'<div class="evo-tag">Actual</div>':''}</div>
     <div class="evo-row ${state.level>15?'active':''}"><div><div class="t">Cabra Sabia</div><div class="s">Nivel 16+</div></div>${state.level>15?'<div class="evo-tag">Actual</div>':''}</div>
 
-    <div class="section-title">Datos de la app</div>
-    <button class="btn-tertiary-link" style="color:var(--error-dark);" onclick="openResetConfirm()">Reiniciar progreso</button>
+    <div style="text-align:center; margin-top:24px;">
+      <button class="btn-tertiary-link" style="color:var(--error-dark);" onclick="openResetConfirm()">Reiniciar progreso</button>
+    </div>
   `;
   return {body, footer:''};
 }
