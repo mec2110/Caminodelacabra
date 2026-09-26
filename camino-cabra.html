@@ -904,8 +904,8 @@ function renderContract(){
       ${goatImg({size:56, src:goatForEquipped()})}
       <p><strong>¡Hola ${displayName()}!</strong><br>¿Todo listo para las cumbres de hoy? Hagamos un nuevo contrato.</p>
     </div>
-    <h2 class="q-title">¿Qué montañas escalamos hoy?</h2>
-    <p class="q-sub">Elegí hasta 5 objetivos diarios para que cumpla tu cabrita hoy.</p>
+    <h2 class="q-title" style="margin-bottom:24px;">¿Qué montañas escalamos hoy?</h2>
+    <p class="q-sub" style="margin-bottom:24px;">Elegí hasta 5 objetivos diarios para que cumpla tu cabrita hoy.</p>
     ${rows}
     ${state.goals.length===0 ? '<p class="empty-hint">Todavía no cargaste ninguna cumbre.</p>' : ''}
     ${state.goals.length < 5 ? `<button class="add-row" onclick="addGoal()"><div class="goal-num">+</div>Añadir otra tarea (hasta 5 cumbres)</button>` : ''}
