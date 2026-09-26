@@ -287,6 +287,10 @@
   .field-group{ text-align:left; margin-bottom:16px; width:100%; }
   .field-label{ display:block; font-size:12px; font-weight:400; color:var(--primary-black); margin-bottom:4px; }
   .field-input{ width:100%; box-sizing:border-box; height:54px; border: solid 1px var(--primary-text); border-radius:8px; padding:16px; font-family:'Open Sans',sans-serif; font-size:16px; color:var(--primary-black); background:var(--surface); }
+  .btn-google{ display:flex; align-items:center; justify-content:center; gap:10px; width:100%; box-sizing:border-box; height:54px; border:1px solid #DADCE0; border-radius:8px; background:#fff; color:#3C4043; font-family:'Open Sans',sans-serif; font-weight:600; font-size:15px; cursor:pointer; transition:filter .12s ease, transform .12s ease; }
+  .btn-google:active{ transform:scale(.98); }
+  .divider-row{ display:flex; align-items:center; gap:10px; width:100%; color:var(--info-dark); font-size:12px; font-weight:600; }
+  .divider-row::before, .divider-row::after{ content:''; flex:1; height:1px; background:var(--bg-purple-light); }
   .field-input::placeholder{ color:var(--neutral-gray); }
   .field-input:focus{ outline:none; box-shadow:0 0 0 2px var(--primary-text); }
   .btn-tertiary-link{ background:none; border:none; color:var(--info-dark); font-family:'Open Sans',sans-serif; font-size:14px; font-weight:600; margin-top:6px; cursor:pointer; padding:8px; text-decoration:none; }
@@ -800,6 +804,28 @@ function renderOnboarding(){
       footer: `<button class="btn btn-primary" onclick="loginSubmit()">Ingresar</button>`
     };
   }
+  if(state.authStep === 'register'){
+    return {
+      body: `
+        <div class="content" style="padding-top:16px;">
+          <div class="focal-card">
+            <h5 class="login-title">Creá tu cuenta en <span class="login-title-accent">GOAT PATH</span></h5>
+            ${goatImg({size:130})}
+            <button class="btn-google" onclick="googleSignIn()">
+              <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.88 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.98v2.33A9 9 0 009 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.7V4.97H.98A9 9 0 000 9c0 1.45.35 2.83.98 4.03l2.97-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.98 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+              Continuar con Google
+            </button>
+            <div class="divider-row">o</div>
+            <div class="field-group">
+              <label class="field-label">Nombre</label>
+              <input class="field-input" id="registerName" type="text" placeholder="¿Cómo te llamás?" value="${(state.userName||'').replace(/"/g,'&quot;')}" />
+            </div>
+            <button class="btn-tertiary-link" onclick="state.authStep=0; render();">¿Ya tenés cuenta? Ingresá acá</button>
+          </div>
+        </div>`,
+      footer: `<button class="btn btn-primary" onclick="registerContinue()">Continuar</button>`
+    };
+  }
   const slide = INTRO_SLIDES[state.authStep-1];
   const isLast = state.authStep === INTRO_SLIDES.length;
   return {
@@ -845,9 +871,23 @@ function loginSubmit(){
   toast('Sesión iniciada');
 }
 function registerSubmit(){
-  // Único camino que dispara las slides de introducción, como corresponde
-  // a un alta nueva.
+  // Abre la pantalla de registro (Google o nombre), que es la única puerta
+  // hacia las slides de introducción, como corresponde a un alta nueva.
   readTypedName();
+  state.authStep = 'register';
+  render();
+}
+function googleSignIn(){
+  // No hay backend real en este prototipo: simulamos la conexión y dejamos
+  // el campo de nombre listo para completar, en vez de fingir datos de una
+  // cuenta que no existe.
+  toast('Simulación de acceso con Google — conectá tu backend para la versión real 🐐');
+  const input = document.getElementById('registerName');
+  if(input) input.focus();
+}
+function registerContinue(){
+  const typed = (document.getElementById('registerName').value || '').trim();
+  if(typed) state.userName = typed;
   state.authStep = 1;
   render();
 }
