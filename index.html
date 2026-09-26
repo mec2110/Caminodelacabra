@@ -252,6 +252,14 @@
   .toast-overlay.show{ opacity:1; }
   .toast{ position:absolute; left:50%; top:54px; max-width: calc(100% - 44px); background:var(--neutral-white); border:1px solid var(--primary-blue); color:var(--primary-blue); padding:10px 16px; border-radius:8px; font-size:14px; line-height:18px; font-weight:600; text-align:center; box-shadow:var(--shadow); opacity:0; transform:translate(-50%, -6px); transition:all .25s ease; pointer-events:none; z-index:20;}
   .toast.show{ opacity:1; transform:translate(-50%, 0); }
+  .confirm-overlay{ position:absolute; inset:0; background:rgba(0,0,0,.5); opacity:0; pointer-events:none; transition:opacity .2s ease; z-index:29; display:flex; align-items:center; justify-content:center; padding:24px; box-sizing:border-box; }
+  .confirm-overlay.show{ opacity:1; pointer-events:auto; }
+  .confirm-card{ background:var(--surface); border-radius:var(--radius-lg); padding:24px; width:100%; max-width:340px; box-shadow:var(--shadow); box-sizing:border-box; text-align:center; transform:translateY(6px); transition:transform .2s ease; }
+  .confirm-overlay.show .confirm-card{ transform:translateY(0); }
+  .confirm-title{ font-size:16px; line-height:20px; font-weight:600; color:var(--primary-black); margin:0 0 8px; }
+  .confirm-text{ font-size:14px; line-height:20px; color:var(--info-dark); margin:0 0 20px; }
+  .confirm-buttons{ display:flex; flex-direction:column; gap:10px; }
+  .btn-danger{ background:var(--error-dark); color:#fff; }
 
   /* Onboarding */
   .onb-screen{ height:100%; display:flex; flex-direction:column; }
@@ -327,6 +335,17 @@
 
   <div class="toast-overlay" id="toastOverlay"></div>
   <div class="toast" id="toast"></div>
+
+  <div class="confirm-overlay" id="confirmOverlay">
+    <div class="confirm-card">
+      <p class="confirm-title">¿Reiniciar todo el progreso?</p>
+      <p class="confirm-text">Se borran racha, Brotes de Alfalfa, nivel, accesorios y Seguros de Racha. Esto no se puede deshacer — usalo solo si otra persona va a usar la app desde cero.</p>
+      <div class="confirm-buttons">
+        <button class="btn btn-danger" onclick="confirmReset()">Sí, reiniciar todo</button>
+        <button class="btn-tertiary-link" onclick="closeResetConfirm()">Cancelar</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -1084,8 +1103,25 @@ function renderPerfil(){
     <div class="evo-row ${state.level<=5?'active':''}"><div><div class="t">Cabrito Bebé</div><div class="s">Nivel 1–5</div></div>${state.level<=5?'<div class="evo-tag">Actual</div>':''}</div>
     <div class="evo-row ${state.level>5&&state.level<=15?'active':''}"><div><div class="t">Cabra Exploradora</div><div class="s">Nivel 6–15</div></div>${state.level>5&&state.level<=15?'<div class="evo-tag">Actual</div>':''}</div>
     <div class="evo-row ${state.level>15?'active':''}"><div><div class="t">Cabra Sabia</div><div class="s">Nivel 16+</div></div>${state.level>15?'<div class="evo-tag">Actual</div>':''}</div>
+
+    <div class="section-title">Datos de la app</div>
+    <button class="btn-tertiary-link" style="color:var(--error-dark);" onclick="openResetConfirm()">Reiniciar progreso (si va a usarla otra persona)</button>
   `;
   return {body, footer:''};
+}
+
+function openResetConfirm(){
+  document.getElementById('confirmOverlay').classList.add('show');
+}
+function closeResetConfirm(){
+  document.getElementById('confirmOverlay').classList.remove('show');
+}
+function confirmReset(){
+  closeResetConfirm();
+  try{ localStorage.removeItem('camino-cabra-state-v2'); }catch(e){}
+  state = Object.assign({}, defaultState);
+  render();
+  toast('Progreso reiniciado. ¡Arrancamos de cero! 🐐');
 }
 
 /* ---------- Ayuda / FAQs (misma info de la presentación inicial, siempre disponible) ---------- */
