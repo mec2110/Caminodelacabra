@@ -896,8 +896,14 @@ function googleSignIn(){
 function registerContinue(){
   const typed = (document.getElementById('registerName').value || '').trim();
   if(typed) state.userName = typed;
-  state.authStep = 1;
-  render();
+  if(state.onboarded){
+    // Este dispositivo ya vio la introducción alguna vez: no se la repetimos,
+    // aunque haya vuelto a pasar por "Registrate acá".
+    finishOnboarding();
+  } else {
+    state.authStep = 1;
+    render();
+  }
 }
 function nextIntro(){ state.authStep++; render(); }
 function skipOnboarding(){ finishOnboarding(); }
