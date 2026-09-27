@@ -4,6 +4,16 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Goat Path</title>
+
+<!-- PWA: permite "Instalar app" / "Agregar a pantalla de inicio" en Android e iOS -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2D0E9A">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="GOAT PATH">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/icon-192.png" type="image/png">
 <script>
   /* Modo claro por defecto, salvo que: (a) la persona ya eligió un modo antes con el
      toggle (se respeta siempre), o (b) no eligió nada todavía y su sistema/celular
@@ -1427,6 +1437,15 @@ document.head.appendChild(styleSheet);
 // persona — no hace falta repetir el chequeo acá, porque el login siempre
 // se vuelve a pedir al abrir la app.
 render();
+
+// Registro del service worker: es lo que habilita "Instalar app" / "Agregar
+// a pantalla de inicio" y que la app siga abriendo sin conexión. Si falla
+// (por ejemplo al abrir el archivo local sin servidor) no rompe nada más.
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').catch(function(){});
+  });
+}
 </script>
 </body>
 </html>
