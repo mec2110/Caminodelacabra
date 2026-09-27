@@ -636,7 +636,15 @@ let state = load();
 function load(){
   try{
     const raw = localStorage.getItem('camino-cabra-state-v2');
-    if(raw) return Object.assign({}, defaultState, JSON.parse(raw));
+    if(raw){
+      const saved = JSON.parse(raw);
+      // Cada vez que se abre la app hay que volver a iniciar sesión:
+      // no la dejamos abierta en la última pantalla en la que quedó.
+      // El progreso (racha, XP, accesorios, contrato del día) se conserva igual.
+      saved.loggedIn = false;
+      saved.authStep = 0;
+      return Object.assign({}, defaultState, saved);
+    }
   }catch(e){}
   return JSON.parse(JSON.stringify(defaultState));
 }
