@@ -1039,7 +1039,7 @@ function renderContractExtra(){
   const hasNewText = state.goals.slice(boundary).some(g=>(g||'').trim().length>0);
   const footer = `
     <button class="btn btn-primary" id="startDayBtn" onclick="startExtraGoals()" ${hasNewText?'':'disabled'}>Sumar y seguir</button>
-    <button class="btn-tertiary-link" onclick="goTab('perfil')">Listo por hoy</button>
+    <button class="btn btn-outline" onclick="goTab('perfil')">Listo por hoy</button>
     <button class="btn-tertiary-link" onclick="logout()">Cerrar sesión</button>
   `;
   return {body, footer};
@@ -1206,7 +1206,7 @@ function renderSummary(){
   `;
   const footer = success
     ? `<button class="btn btn-primary" onclick="goToAddMore()">Sumar otra cumbre</button>
-       <button class="btn-tertiary-link" onclick="goTab('perfil')">Listo por hoy</button>`
+       <button class="btn btn-outline" onclick="goTab('perfil')">Listo por hoy</button>`
     : `<button class="btn btn-primary" onclick="resetDay()">Vuelve a intentarlo mañana</button>`;
   return {body, footer};
 }
