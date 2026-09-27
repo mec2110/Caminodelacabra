@@ -342,11 +342,11 @@
 
   <div class="confirm-overlay" id="confirmOverlay">
     <div class="confirm-card">
-      <p class="confirm-title">¿Reiniciar todo el progreso?</p>
-      <p class="confirm-text">Se borran racha, Brotes de Alfalfa, nivel, accesorios y Seguros de Racha. Esto no se puede deshacer — usalo solo si otra persona va a usar la app desde cero.</p>
+      <p class="confirm-title" id="confirmTitle"></p>
+      <p class="confirm-text" id="confirmText"></p>
       <div class="confirm-buttons">
-        <button class="btn btn-danger" onclick="confirmReset()">Sí, reiniciar todo</button>
-        <button class="btn-tertiary-link" onclick="closeResetConfirm()">Cancelar</button>
+        <button class="btn" id="confirmYesBtn" onclick="runConfirmYes()"></button>
+        <button class="btn-tertiary-link" id="confirmNoBtn" onclick="closeConfirm()"></button>
       </div>
     </div>
   </div>
@@ -1064,7 +1064,7 @@ function renderCelebration(){
       <p class="celeb-sub">${state.goals[state.goalIndex]} completado con éxito</p>
     </div>
   `;
-  const footer = `<button class="btn btn-primary" onclick="${isLast?'finishDay()':'nextGoal()'}">${isLast? 'Cerrar el día' : 'Sigamos avanzando'}</button>`;
+  const footer = `<button class="btn btn-primary" onclick="${isLast?'confirmCloseDay()':'nextGoal()'}">${isLast? 'Cerrar el día' : 'Sigamos avanzando'}</button>`;
   return {body, footer};
 }
 function nextGoal(){ state.goalIndex++; state.camino='focus'; render(); }
@@ -1165,18 +1165,54 @@ function renderPerfil(){
   return {body, footer:''};
 }
 
-function openResetConfirm(){
+/* ---------- Modal de confirmación genérico (reutilizable) ---------- */
+let _confirmOnYes = null;
+function openConfirm({title, text, yesLabel='Sí', noLabel='No', yesClass='btn-primary', onYes}){
+  document.getElementById('confirmTitle').textContent = title;
+  document.getElementById('confirmText').textContent = text;
+  const yesBtn = document.getElementById('confirmYesBtn');
+  yesBtn.textContent = yesLabel;
+  yesBtn.className = 'btn ' + yesClass;
+  document.getElementById('confirmNoBtn').textContent = noLabel;
+  _confirmOnYes = onYes;
   document.getElementById('confirmOverlay').classList.add('show');
 }
-function closeResetConfirm(){
+function closeConfirm(){
   document.getElementById('confirmOverlay').classList.remove('show');
+  _confirmOnYes = null;
+}
+function runConfirmYes(){
+  const cb = _confirmOnYes;
+  closeConfirm();
+  if(cb) cb();
+}
+
+function openResetConfirm(){
+  openConfirm({
+    title: '¿Reiniciar todo el progreso?',
+    text: 'Se borran racha, Brotes de Alfalfa, nivel, accesorios y Seguros de Racha. Esto no se puede deshacer — usalo solo si otra persona va a usar la app desde cero.',
+    yesLabel: 'Sí, reiniciar todo',
+    noLabel: 'Cancelar',
+    yesClass: 'btn-danger',
+    onYes: confirmReset,
+  });
 }
 function confirmReset(){
-  closeResetConfirm();
   try{ localStorage.removeItem('camino-cabra-state-v2'); }catch(e){}
   state = Object.assign({}, defaultState);
   render();
   toast('Progreso reiniciado. ¡Arrancamos de cero! 🐐');
+}
+
+function confirmCloseDay(){
+  openConfirm({
+    title: '¿Ya completaste tu día?',
+    text: 'Vas a cerrar el día y sumar tu racha. Si todavía te queda algo pendiente, volvé y seguí escalando un poco más.',
+    yesLabel: 'Sí, cerrar el día',
+    noLabel: 'No, seguir',
+    yesClass: 'btn-primary',
+    onYes: finishDay,
+  });
 }
 
 /* ---------- Ayuda / FAQs (misma info de la presentación inicial, siempre disponible) ---------- */
