@@ -630,7 +630,7 @@ const defaultState = {
   owned:[], equipped:[],
   streakShields:0, lastCompletionDate:null,
   userName:'',
-  dayDone:false, daySuccess:false,
+  dayDone:false, daySuccess:false, contractDate:null,
 };
 let state = load();
 function load(){
@@ -675,6 +675,20 @@ function checkStreakRollover(){
   state.streak = 0;
   return 'lost';
 }
+// Ya no existe un botón manual para "cerrar el día": el contrato de hoy se
+// da por terminado solo cuando cambia la fecha real. Si quedó un contrato
+// abierto (dayDone=true) de un día anterior, lo reseteamos acá para arrancar
+// de cero — como el objetivo diario de Duolingo, que se reinicia solo al otro día.
+function checkNewDay(){
+  if(state.dayDone && state.contractDate && state.contractDate !== todayStr()){
+    state.dayDone = false;
+    state.daySuccess = false;
+    state.goals = ['','',''];
+    state.goalIndex = 0;
+    state.skipStreak = 0;
+    state.camino = 'contract';
+  }
+}
 
 const SHOP = [
   {id:'glasses', name:'Lentes Cool', price:120, icon:'🕶️'},
@@ -712,7 +726,8 @@ function toast(msg){
 
 function goTab(tab){
   state.tab = tab;
-  if(tab==='camino' && state.dayDone) state.camino='summary';
+  if(tab==='camino' && state.dayDone && !state.daySuccess) state.camino='summary';
+  else if(tab==='camino' && state.dayDone && state.daySuccess) state.camino='contract';
   else if(tab==='camino' && state.camino==='celebration') state.camino='focus';
   render();
 }
@@ -875,8 +890,16 @@ function loginSubmit(){
   state.loggedIn = true;
   state.authStep = 0;
   state.tab = 'camino';
+  checkNewDay();
+  const streakEvent = checkStreakRollover();
   render();
-  toast('Sesión iniciada');
+  if(streakEvent === 'shielded'){
+    toast('Usamos tu Seguro de Racha para proteger tu fuego 🔥🛡️');
+  } else if(streakEvent === 'lost'){
+    toast('Se apagó la racha, pero tu cabrita ya está lista para volver a subir 🐐');
+  } else {
+    toast('Sesión iniciada');
+  }
 }
 function registerSubmit(){
   // Abre la pantalla de registro (Google o nombre), que es la única puerta
@@ -913,6 +936,8 @@ function finishOnboarding(){
   state.authStep = 0;
   state.tab = 'camino';
   state.camino = 'contract';
+  checkNewDay();
+  checkStreakRollover();
   render();
 }
 function logout(){
@@ -938,7 +963,10 @@ function logout(){
 
 /* ---------- Camino (contrato / foco / celebración / resumen) ---------- */
 function renderCamino(){
-  if(state.dayDone) state.camino='summary';
+  // Solo forzamos la pantalla de resumen cuando el día no se completó
+  // (renderSummary, caso "¡Oh no!"). Cuando sí se completó, el contrato se
+  // vuelve a mostrar (en modo "sumar más"), no un resumen fijo.
+  if(state.dayDone && !state.daySuccess) state.camino='summary';
   if(state.camino==='contract') return renderContract();
   if(state.camino==='focus') return renderFocus();
   if(state.camino==='celebration') return renderCelebration();
@@ -946,6 +974,11 @@ function renderCamino(){
 }
 
 function renderContract(){
+  // Si ya se aseguró la racha de hoy, no mostramos el contrato vacío de
+  // siempre: mostramos lo que ya se cumplió + la opción de sumar más,
+  // sin que eso cuente como "otro día".
+  if(state.dayDone && state.daySuccess) return renderContractExtra();
+
   const rows = state.goals.map((g,i)=>`
       <div class="goal-row">
         <div class="goal-num">${i+1}</div>
@@ -971,6 +1004,60 @@ function renderContract(){
   `;
   return {body, footer};
 }
+
+// Pantalla "racha asegurada, ¿sumamos más?": estilo objetivo diario de
+// Duolingo. Las cumbres ya cumplidas (índices < goalIndex) se muestran
+// tildadas y fijas; debajo se pueden cargar cumbres extra del mismo día.
+function renderContractExtra(){
+  const boundary = state.goalIndex;
+  const doneRows = state.goals.slice(0, boundary).map(g=>`
+      <div class="goal-row" style="opacity:.55;">
+        <div class="goal-num">✓</div>
+        <div style="flex:1; text-align:left; padding:8px 4px;">${(g||'').replace(/</g,'&lt;')}</div>
+      </div>`).join('');
+  const extraRows = state.goals.slice(boundary).map((g,i)=>{
+    const idx = boundary+i;
+    return `
+      <div class="goal-row">
+        <div class="goal-num">${idx+1}</div>
+        <input value="${(g||'').replace(/"/g,'&quot;')}" placeholder="Ingresar tarea" oninput="state.goals[${idx}]=this.value; updateStartBtn();" />
+        <button class="goal-del" onclick="removeGoal(${idx})" aria-label="Quitar">✕</button>
+      </div>`;
+  }).join('');
+  const pendingExtra = state.goals.length - boundary;
+
+  const body = `
+    <div class="hello">
+      ${goatImg({size:56, src:goatForEquipped()})}
+      <p><strong>¡Racha de hoy asegurada, ${displayName()}! 🔥</strong><br>Si te queda energía, sumá otra cumbre — sigue siendo el mismo día, no hace falta cerrar nada.</p>
+    </div>
+    <div class="section-title">Cumbres de hoy</div>
+    ${doneRows}
+    ${extraRows}
+    ${pendingExtra < 5 ? `<button class="add-row" onclick="addGoal()"><div class="goal-num">+</div>Añadir otra tarea</button>` : ''}
+  `;
+  const hasNewText = state.goals.slice(boundary).some(g=>(g||'').trim().length>0);
+  const footer = `
+    <button class="btn btn-primary" id="startDayBtn" onclick="startExtraGoals()" ${hasNewText?'':'disabled'}>Sumar y seguir</button>
+    <button class="btn-tertiary-link" onclick="goTab('perfil')">Listo por hoy</button>
+    <button class="btn-tertiary-link" onclick="logout()">Cerrar sesión</button>
+  `;
+  return {body, footer};
+}
+function startExtraGoals(){
+  const boundary = state.goalIndex;
+  const doneGoals = state.goals.slice(0, boundary);
+  const newGoals = state.goals.slice(boundary).map(g=>(g||'').trim()).filter(Boolean);
+  if(newGoals.length===0){ toast('Escribí al menos una cumbre nueva'); return; }
+  state.goals = doneGoals.concat(newGoals);
+  // Volvemos a foco sobre las cumbres nuevas sin tocar la racha ya asegurada
+  // ni el contador de cumbres ya cumplidas (goalIndex sigue en "boundary").
+  state.dayDone = false;
+  state.daySuccess = false;
+  state.skipStreak = 0;
+  state.camino = 'focus';
+  render();
+}
 function updateStartBtn(){
   const btn = document.getElementById('startDayBtn');
   if(!btn) return;
@@ -978,7 +1065,11 @@ function updateStartBtn(){
   btn.disabled = !hasText;
 }
 function addGoal(){
-  if(state.goals.length>=5){ toast('Máximo 5 cumbres por día'); return; }
+  // El tope de 5 es sobre cumbres PENDIENTES a la vez (no sobre el total del
+  // día): así, después de asegurar la racha, se puede seguir sumando cumbres
+  // extra sin chocar contra un límite pensado para no saturar al arrancar.
+  const pending = state.goals.length - state.goalIndex;
+  if(pending>=5){ toast('Máximo 5 cumbres pendientes a la vez'); return; }
   state.goals.push('');
   render();
   const inputs = document.querySelectorAll('.goal-row input');
@@ -994,6 +1085,7 @@ function startDay(){
   state.goals = clean;
   state.goalIndex = 0;
   state.skipStreak = 0;
+  state.contractDate = todayStr();
   state.camino = 'focus';
   render();
 }
@@ -1064,20 +1156,37 @@ function renderCelebration(){
       <p class="celeb-sub">${state.goals[state.goalIndex]} completado con éxito</p>
     </div>
   `;
-  const footer = `<button class="btn btn-primary" onclick="${isLast?'confirmCloseDay()':'nextGoal()'}">${isLast? 'Cerrar el día' : 'Sigamos avanzando'}</button>`;
+  const footer = `<button class="btn btn-primary" onclick="${isLast?'finishGoalsForToday()':'nextGoal()'}">${isLast? '¡Listo!' : 'Sigamos avanzando'}</button>`;
   return {body, footer};
 }
 function nextGoal(){ state.goalIndex++; state.camino='focus'; render(); }
-function finishDay(){ state.dayDone = true; state.daySuccess = true; state.streak += 1; state.lastCompletionDate = todayStr(); state.camino='summary'; render(); }
+// Como la racha diaria de Duolingo: al completar todas las cumbres del
+// contrato se asegura la racha del día UNA sola vez (sin importar cuántas
+// rondas de cumbres extra se agreguen después). No hay "cerrar el día": no
+// se destruye nada acá, así que tampoco hace falta un modal de confirmación.
+function finishGoalsForToday(){
+  const firstTimeToday = state.lastCompletionDate !== todayStr();
+  if(firstTimeToday){
+    state.streak += 1;
+    state.lastCompletionDate = todayStr();
+  }
+  state.dayDone = true;
+  state.daySuccess = true;
+  state.contractDate = todayStr();
+  state.goalIndex = state.goals.length;
+  // La primera vez mostramos la pantalla grande de festejo; si ya se había
+  // asegurado la racha hoy (ronda extra), vamos directo a poder sumar más.
+  state.camino = firstTimeToday ? 'summary' : 'contract';
+  render();
+}
 
 function renderSummary(){
   const total = state.goals.length;
   const success = !!state.daySuccess;
   const completed = success ? total : state.goalIndex;
   const goat = success ? GOAT_SUMMIT : GOAT_SAD;
-  const title = success ? '¡Montaña escalada!' : '¡Oh no!';
-  const sub = success ? 'Completaste todos tus objetivos hoy.' : 'No completaste todos tus objetivos hoy.';
-  const btnLabel = success ? 'Cerrar el día' : 'Vuelve a intentarlo mañana';
+  const title = success ? '¡Racha de hoy asegurada!' : '¡Oh no!';
+  const sub = success ? 'Completaste tus objetivos de hoy. Si querés, podés seguir sumando cumbres.' : 'No completaste todos tus objetivos hoy.';
   const body = `
     <div style="text-align:center;">${goatImg({size:190, src:goat})}</div>
     <h2 class="summary-title">${title}</h2>
@@ -1095,9 +1204,13 @@ function renderSummary(){
       <div class="stat-box purple"><div class="k">EXPERIENCIA</div><div class="v">+${completed*50} XP</div></div>
     </div>
   `;
-  const footer = `<button class="btn btn-primary" onclick="resetDay()">${btnLabel}</button>`;
+  const footer = success
+    ? `<button class="btn btn-primary" onclick="goToAddMore()">Sumar otra cumbre</button>
+       <button class="btn-tertiary-link" onclick="goTab('perfil')">Listo por hoy</button>`
+    : `<button class="btn btn-primary" onclick="resetDay()">Vuelve a intentarlo mañana</button>`;
   return {body, footer};
 }
+function goToAddMore(){ state.camino='contract'; render(); }
 function endDayEarly(){
   state.dayDone = true;
   state.daySuccess = false;
@@ -1202,17 +1315,6 @@ function confirmReset(){
   state = Object.assign({}, defaultState);
   render();
   toast('Progreso reiniciado. ¡Arrancamos de cero! 🐐');
-}
-
-function confirmCloseDay(){
-  openConfirm({
-    title: '¿Ya completaste tu día?',
-    text: 'Vas a cerrar el día y sumar tu racha. Si todavía te queda algo pendiente, volvé y seguí escalando un poco más.',
-    yesLabel: 'Sí, cerrar el día',
-    noLabel: 'No, seguir',
-    yesClass: 'btn-primary',
-    onYes: finishDay,
-  });
 }
 
 /* ---------- Ayuda / FAQs (misma info de la presentación inicial, siempre disponible) ---------- */
@@ -1320,17 +1422,11 @@ styleSheet.textContent = `@keyframes confetti-burst{
 }`;
 document.head.appendChild(styleSheet);
 
+// La racha y el contrato del día se revisan al iniciar sesión (loginSubmit /
+// finishOnboarding), momento en el que "hoy" pasa a tener sentido para la
+// persona — no hace falta repetir el chequeo acá, porque el login siempre
+// se vuelve a pedir al abrir la app.
 render();
-if(state.loggedIn){
-  const streakEvent = checkStreakRollover();
-  if(streakEvent === 'shielded'){
-    render();
-    toast('Usamos tu Seguro de Racha para proteger tu fuego 🔥🛡️');
-  } else if(streakEvent === 'lost'){
-    render();
-    toast('Se apagó la racha, pero tu cabrita ya está lista para volver a subir 🐐');
-  }
-}
 </script>
 </body>
 </html>
